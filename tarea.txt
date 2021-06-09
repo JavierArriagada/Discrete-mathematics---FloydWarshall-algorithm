@@ -1,0 +1,106 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+
+int main(){
+
+int nodo = 0;
+char nombreCiudad[50][30];
+char nombreCarretera[300][30];
+int coordenadasCiudades[50][2];
+int coordenadasCarreteras[300][2];
+char inicioCarretera[300][30];
+char finCarretera[300][30];
+int largo[300][1];
+FILE *fp;
+int totalCiudades = 0;
+int totalCarreteras = 0;
+char archivo[30];
+char ciudad[30];
+char carretera[30];
+while(1){
+	int i,k;
+	printf("Ingrese el nombre del archivo\n");
+	scanf("%s", archivo);
+	fp = fopen(archivo, "r");
+	if(fp == NULL){
+		printf("El archivo no existe\n");
+		break;
+	}
+		for(i=0; i<50; i++){
+			for(k=0;k<30;k++){
+				nombreCiudad[i][k] = 0;			
+		}
+}
+		while(!feof(fp)){//SALIA ERROR PORQUE NUNCA VA LLEGAR A EOF YA QUE AUN NO LEEMOS LAS CARRETERAS, POR ESO IMPRIMIA BASURA
+		fscanf(fp, "%s", ciudad);
+		for(i = 0; i<50; i++){
+			totalCiudades = i;
+			fscanf(fp, "%s", ciudad);
+			if(strcmp(ciudad, "Carreteras") == 0)
+				break;
+			else{
+				strcpy(nombreCiudad[i],ciudad);
+				fscanf(fp, "%d %d", &coordenadasCiudades[i][0], &coordenadasCiudades[i][1]);
+			}
+		}
+
+	// Aca empezaria la lectura de carreteras
+		i = 0;
+		int k,l;
+		for(i = 0; i < 300; i++){
+			fscanf(fp,"%s", nombreCarretera[k]);
+			fscanf(fp, "%s", carretera);
+			if(feof(fp)) break;
+			for(k = 0 ; k < 50 ; k++){
+				if(!strcmp(carretera,nombreCiudad[k])){
+					strcpy(inicioCarretera[i],carretera);
+                                        fscanf(fp, "%s", carretera);
+					for(l = 0; l<50 ; l++){
+						if(!strcmp(carretera,nombreCiudad[l])){
+							strcpy(nombreCarretera[i],carretera);
+							fscanf(fp, "%d", &largo[i][0]);
+						}
+						else{
+							strcpy(nombreCarretera[i],carretera);
+							fscanf(fp, "%d %d", &coordenadasCarreteras[i][1], &largo[i][0]);
+						}
+					}
+				}				
+				else{
+					strcpy(inicioCarretera[i],carretera);
+					fscanf(fp, "%d", &coordenadasCarreteras[i][0]);
+					fscanf(fp,"%s", carretera);
+					for(l = 0; l < 50 ; l++){
+						if(!strcmp(nombreCiudad[l],carretera)){
+							strcpy(finCarretera[i], carretera);
+							fscanf(fp, "%d", &largo[i][0]);
+						}
+						else{
+							strcpy(finCarretera[i], carretera);
+							fscanf(fp, "%d %d", &coordenadasCarreteras[i][1], &largo[i][0]);
+						}
+					}
+				}
+			}
+		totalCarreteras++;
+		}
+   
+int j;
+i = 0;
+for(j=0 ; j < totalCiudades ;j++){
+if(nombreCiudad[i] != '\0'){
+printf("%s %d %d\n", nombreCiudad[j],coordenadasCiudades[j][0], coordenadasCiudades[j][1]); 
+}
+else break;
+}
+for(i = 0; i < totalCarreteras ; i++){
+printf("%s %s %d %s %d %d\n", nombreCarretera[i], inicioCarretera[i], coordenadasCarreteras[i][0], finCarretera[i], coordenadasCarreteras[i][1], largo[i][0]);
+ }
+}
+}
+
+	return 0;
+}	

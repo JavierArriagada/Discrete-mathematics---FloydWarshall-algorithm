@@ -1,0 +1,280 @@
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
+#define LEN 50
+#define Inf 1000
+
+typedef enum {
+	FALSE,
+	TRUE,
+} boolean;
+
+typedef enum {
+	CiudadCiudad, 
+	InterseccionInterseccion, 
+	CiudadInterseccion,  
+	InterseccionCiudad,
+}tipoDeCarretera;
+
+typedef struct{
+	char ciudad[50];
+	int x;
+	int y;
+}ciudades;
+
+typedef struct {
+	char nombre[LEN];
+	char origen[LEN];
+	char destino[LEN];
+	int kmOrigen;
+	int kmDestino;
+	int longitud;
+	tipoDeCarretera tipo;
+} camino;
+
+
+
+FILE *file;
+ciudades city[50];
+camino carreteras[200];
+char* tokens[6];
+int tokensContador = 0;
+int carreterasContador;
+char linea[LEN];
+boolean isNum();
+
+boolean isNum(char* str){
+	int i;
+	for(i = 0; i < strlen(str); i++){
+		if(isdigit(str[i]) == 0)
+			return FALSE;
+	}
+	return TRUE;
+}
+
+void inicializar(){
+	carreterasContador = 0;
+	tokensContador = 0;
+	int i;
+	for(i = 0; i < 6; i++)
+		tokens[i] = NULL;
+}
+
+void guardarCiudad(FILE *file,int n){
+	rewind(file);
+	char linea[100];
+	char tmp[] = "Ciudades";
+	char *token;
+	int i=0;
+	fgets(linea,100,file);
+	int j;	
+	if(strcmp(tmp,linea) != 0){
+		for(j=0; j<n; j++){
+			fgets(linea,100,file);
+			token = strtok(linea," ");			
+			while(token != NULL){
+				strcpy(city[i].ciudad,token);
+				token = strtok( NULL, " " );
+				city[i].x = atoi(token);			
+				token = strtok( NULL, " " );
+				city[i].y = atoi(token);
+				token = strtok( NULL, " " );
+				printf("%s %d %d\n",city[i].ciudad,city[i].x,city[i].y);
+				i++;
+			}	
+		}
+	}
+	else printf("Archivo no valido\n");
+}
+
+void cargarCarreteraCiudadCiudad(){
+	strcpy(carreteras[carreterasContador].nombre, tokens[0]);
+	strcpy(carreteras[carreterasContador].origen, tokens[1]);
+	strcpy(carreteras[carreterasContador].destino, tokens[2]);
+	carreteras[carreterasContador].longitud = atoi(tokens[3]);
+	carreteras[carreterasContador].tipo = CiudadCiudad;
+}
+
+void cargarCarreteraCiudadInterseccion(){
+	//interseccion -> Ciudad
+	if(isNum(tokens[2]) == 1){
+		strcpy(carreteras[carreterasContador].nombre, tokens[0]);
+		strcpy(carreteras[carreterasContador].origen, tokens[1]);
+		carreteras[carreterasContador].kmOrigen = atoi(tokens[2]);
+		strcpy(carreteras[carreterasContador].destino, tokens[3]);
+		carreteras[carreterasContador].longitud = atoi(tokens[4]);
+		carreteras[carreterasContador].tipo = InterseccionCiudad;
+	}
+	//ciudadad -> interseccion
+	else{
+		strcpy(carreteras[carreterasContador].nombre, tokens[0]);
+		strcpy(carreteras[carreterasContador].origen, tokens[1]);
+		strcpy(carreteras[carreterasContador].destino, tokens[2]);
+		carreteras[carreterasContador].kmDestino = atoi(tokens[3]);
+		carreteras[carreterasContador].longitud = atoi(tokens[4]);
+		carreteras[carreterasContador].tipo = CiudadInterseccion;
+	}
+	
+}
+
+void cargarCarreteraInterseccionInterseccion(){
+	strcpy(carreteras[carreterasContador].nombre, tokens[0]);
+	strcpy(carreteras[carreterasContador].origen, tokens[1]);
+	carreteras[carreterasContador].kmOrigen = atoi(tokens[2]);
+	strcpy(carreteras[carreterasContador].destino, tokens[3]);
+	carreteras[carreterasContador].kmDestino = atoi(tokens[4]);
+	carreteras[carreterasContador].longitud = atoi(tokens[5]);
+	carreteras[carreterasContador].tipo = InterseccionInterseccion;
+}
+
+void guardarCamino(){
+	while(!feof(file)){
+		fgets(linea, LEN, file);
+		int i;
+		for(i = 0; i < 6; i++){
+			tokens[i] = strtok(i == 0 ? linea : NULL, " ");
+			if(tokens[i] == NULL)
+				break;
+		}
+		tokensContador = i;
+		if(tokensContador == 4)
+			cargarCarreteraCiudadCiudad();
+		else if(tokensContador == 5)
+			cargarCarreteraCiudadInterseccion();
+		else if(tokensContador == 6)
+			cargarCarreteraInterseccionInterseccion();
+		else
+			continue;
+		carreterasContador++;
+	}
+}
+
+int contarCiudad(FILE *file){
+	int i;
+	char tmp[]="Carreteras";
+	char linea[100];
+	char *token;
+	for(i=0;i<50;i++){
+		fgets(linea,100,file);	
+		token = strtok(linea,"\n");
+		while(token != NULL){
+			token = strtok(NULL,"\n");
+		}
+		if(strcmp(tmp,linea) == 0){			
+			return i-1;
+		}
+	}
+	return i;	
+}
+
+void imprimir(){
+	int i;
+	
+	for(i=0;i<carreterasContador;i++){
+		printf("%s\n", city[i].ciudad);
+	}
+	
+	
+	puts("Carreteras");
+	for(i = 0; i < carreterasContador; i++){
+		switch(carreteras[i].tipo){
+			case CiudadCiudad:{
+				printf("%s %s %s %d\n", carreteras[i].nombre, carreteras[i].origen, carreteras[i].destino, carreteras[i].longitud);
+				break;
+			}
+			case CiudadInterseccion:{
+				printf("%s %s %s %d %d\n", carreteras[i].nombre, carreteras[i].origen, carreteras[i].destino, carreteras[i].kmDestino, carreteras[i].longitud);
+				break;
+			}
+			case InterseccionCiudad:{
+				printf("%s %s %d %s %d\n", carreteras[i].nombre, carreteras[i].origen, carreteras[i].kmOrigen, carreteras[i].destino, carreteras[i].longitud);
+				break;
+			}
+			case InterseccionInterseccion:{
+				printf("%s %s %d %s %d %d\n", carreteras[i].nombre, carreteras[i].origen, carreteras[i].kmOrigen, carreteras[i].destino, carreteras[i].kmDestino, carreteras[i].longitud);
+				break;
+			}
+		}
+	}
+}
+
+void adyM(){
+
+	int n=5,ady[n][n],i,j,k;
+	
+	for(i=0;i<n;i++){
+		for(j=0;j<n;j++){
+			if(i==j){
+				ady[i][j] = 0;
+			}
+			else{
+				ady[i][j] = Inf;
+			}
+		}
+	}
+	
+	
+	for(i=0;i<n;i++){
+		for(j=0;j<n;j++){
+			for(k=0;k<n;k++){
+		
+				if(strcmp(carreteras[i].origen,city[j].ciudad)==0){
+					if(strcmp(carreteras[i].destino,city[k].ciudad)==0){
+						ady[j][k] = carreteras[i].longitud;
+						ady[k][j] = carreteras[i].longitud;
+					}
+				}
+			}
+		}
+	}
+	
+	for(i=0;i<n;i++){
+		for(j=0;j<n;j++){
+			printf("%d\t", ady[i][j]);
+		}
+		printf("\n");
+	}
+
+}
+
+
+int main(){
+
+	char archivo[100];
+	while(1){
+		printf("Ingrese nombre del archivo que desea leer:\n");  
+		scanf("%s", archivo);
+
+		
+		file = fopen(archivo,"r");
+		
+		if(file != NULL){
+			if(archivo != NULL){
+				inicializar();
+				guardarCiudad(file,contarCiudad(file));
+				guardarCamino();
+				imprimir();
+				adyM();
+				
+				break;	
+			}
+
+			else printf("Archivo vacio\n");
+		}
+		else printf("Archivo no existe\n");
+	}
+
+	
+	
+return 0;
+}
+
+void floyd(){
+	
+	
+	
+	
+	
+	
+	
+}
